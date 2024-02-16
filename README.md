@@ -19,6 +19,7 @@ The TOKEN Goes in .env
 Bot Owner Id goes in config.js
 
 **SCREENSHOTS**
+
 ![image](https://github.com/qubifer/autoban/assets/148722588/959b639b-eb51-4cb3-b611-a57bcfafb0f3)
 
 ![image](https://github.com/qubifer/autoban/assets/148722588/cddbc602-d05f-4a46-8f02-fa5b1b66a0f8)
