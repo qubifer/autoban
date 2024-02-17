@@ -1,8 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
-const sqlite = require('sqlite');
+const mysql = require('mysql');
 
-const databaseFilename = './autoban.sqlite';
+const databaseConfig = require("../../config");
+
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,14 +21,18 @@ module.exports = {
             const usersPerPage = 5;
             const startFrom = (page - 1) * usersPerPage;
 
-            const db = await sqlite.open({
-                filename: databaseFilename,
-                driver: require('sqlite3').Database
+            const connection = mysql.createConnection(databaseConfig);
+            connection.connect();
+
+            const query = 'SELECT * FROM autoban LIMIT ? OFFSET ?';
+            const banInfos = await new Promise((resolve, reject) => {
+                connection.query(query, [usersPerPage, startFrom], (error, results) => {
+                    if (error) reject(error);
+                    else resolve(results);
+                });
             });
 
-            const banInfos = await db.all('SELECT * FROM autoban LIMIT ? OFFSET ?', [usersPerPage, startFrom]);
-
-            await db.close();
+            connection.end();
 
             if (banInfos.length === 0) {
                 await interaction.reply('No banned users found.');
@@ -44,10 +49,9 @@ module.exports = {
                 view.addFields(
                     { name: '**User**', value: `${user.tag}`},
                     { name: '**Blacklisted for:**', value: `${banInfo.reason}` },
-                    { name: '**Date:**', value: `${banInfo.date}}` },
-                  
-                )
-                  }
+                    { name: '**Date:**', value: `${banInfo.date}}` }
+                );
+            }
 
             const previousButton = new ButtonBuilder()
                 .setCustomId('previous')
@@ -67,5 +71,5 @@ module.exports = {
             console.error('Error viewing banned users:', error);
             await interaction.reply('There was an error while processing your request.');
         }
-
-    }}
+    },
+};
