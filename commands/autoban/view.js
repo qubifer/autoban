@@ -47,7 +47,7 @@ module.exports = {
             for (const banInfo of banInfos) {
                 const user = await interaction.client.users.fetch(banInfo.user_id);
                 view.addFields(
-                    { name: '**User**', value: `${user.tag}`},
+                    { name: '**User**', value: `${user.tag} (${banInfo.user_id})`},
                     { name: '**Blacklisted for:**', value: `${banInfo.reason}` },
                     { name: '**Date:**', value: `${banInfo.date}}` }
                 );
