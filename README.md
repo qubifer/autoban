@@ -22,8 +22,7 @@ MYSQL INFO GOES INTO CONFIG.JS
 
 **SCREENSHOTS**
 
-![image](https://github.com/qubifer/autoban/assets/148722588/959b639b-eb51-4cb3-b611-a57bcfafb0f3)
+![image](https://github.com/qubifer/autoban/assets/148722588/42f72e53-2879-4c29-8d70-adde3ea22ba9)
+![image](https://github.com/qubifer/autoban/assets/148722588/13855bc3-2a07-4183-8bc8-e55945794208)
+![image](https://github.com/qubifer/autoban/assets/148722588/02cbdcbf-009c-4aa8-8bb1-a6f7c8d105ac)
 
-![image](https://github.com/qubifer/autoban/assets/148722588/cddbc602-d05f-4a46-8f02-fa5b1b66a0f8)
-
-![image](https://github.com/qubifer/autoban/assets/148722588/7cb87839-7fa7-43af-b3b0-64339ff0e086)
