@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
-const sqlite = require('sqlite');
+const mysql = require('mysql');
+const databaseConfig = require("../../config");
 
-const databaseFilename = './autoban.sqlite';
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,15 +18,19 @@ module.exports = {
         try {
             const userId = interaction.options.getString('user_id');
 
-            const db = await sqlite.open({
-                filename: databaseFilename,
-                driver: require('sqlite3').Database
+            const connection = mysql.createConnection(databaseConfig);
+            connection.connect();
+
+            const query = 'SELECT * FROM autoban WHERE user_id = ?';
+            const [banInfo] = await new Promise((resolve, reject) => {
+                connection.query(query, [userId], (error, results) => {
+                    if (error) reject(error);
+                    else resolve(results);
+                });
             });
 
-            const banInfo = await db.get('SELECT * FROM autoban WHERE user_id = ?', [userId]);
+            connection.end();
 
-            await db.close();
-  
             if (!banInfo) {
                 await interaction.reply('This user is not banned.');
                 return;
