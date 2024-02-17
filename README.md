@@ -12,11 +12,13 @@ it auto bans the user if the user is in the guild the bot is in :)
 ----
 
 **INFO:**
-COMES WITH THE SQLITE FILE
+HAS MYSQL DATABASE
 
 The TOKEN Goes in .env
 
 Bot Owner Id goes in config.js
+
+MYSQL INFO GOES INTO CONFIG.JS
 
 **SCREENSHOTS**
 
