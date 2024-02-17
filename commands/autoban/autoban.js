@@ -1,8 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder } = require('discord.js');
-const sqlite = require('sqlite');
+const mysql = require('mysql');
+const config = require("../../config");
+const databaseConfig = require("../../config");
 
-const databaseFilename = './autoban.sqlite';
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,45 +21,65 @@ module.exports = {
         ),
 
     async execute(interaction) {
-        try {
-            const userId = interaction.options.getString('user_id');
-            const reason = interaction.options.getString('reason');
-            const currentDate = new Date().toISOString(); // Get the current date and time
+        if (interaction.user.id === config.ownerId) {
+            try {
+                const userId = interaction.options.getString('user_id');
+                const reason = interaction.options.getString('reason');
+                const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' '); // Correctly format the date
 
-            const db = await sqlite.open({
-                filename: databaseFilename,
-                driver: require('sqlite3').Database
-            });
-          
-            await db.run('CREATE TABLE IF NOT EXISTS autoban (user_id TEXT PRIMARY KEY, reason TEXT, date TEXT)');
+                const connection = mysql.createConnection(databaseConfig);
+                connection.connect();
 
-            const existingBan = await db.get('SELECT * FROM autoban WHERE user_id = ?', [userId]);
+                const createTableQuery = `CREATE TABLE IF NOT EXISTS autoban (
+                    user_id VARCHAR(255) PRIMARY KEY,
+                    reason TEXT,
+                    date TIMESTAMP
+                )`;
 
-            if (existingBan) {
-                await interaction.reply('This user is already banned.');
-                return;
+                await new Promise((resolve, reject) => {
+                    connection.query(createTableQuery, (error) => {
+                        if (error) reject(error);
+                        else resolve();
+                    });
+                });
+
+                const checkBanQuery = 'SELECT * FROM autoban WHERE user_id = ?';
+                const [existingBan] = await new Promise((resolve, reject) => {
+                    connection.query(checkBanQuery, [userId], (error, results) => {
+                        if (error) reject(error);
+                        else resolve(results);
+                    });
+                });
+
+                if (existingBan) {
+                    await interaction.reply('This user is already banned.');
+                    connection.end();
+                    return;
+                }
+
+                const insertBanQuery = 'INSERT INTO autoban (user_id, reason, date) VALUES (?, ?, ?)';
+                await new Promise((resolve, reject) => {
+                    connection.query(insertBanQuery, [userId, reason, currentDate], (error) => {
+                        if (error) reject(error);
+                        else resolve();
+                    });
+                });
+
+                connection.end();
+                
+                const embed = new EmbedBuilder()
+                    .setColor('#ff0000')
+                    .setTitle('User Auto Blacklist')
+                    .setDescription(`User ${userId} has been globally banned. \n Reason: ${reason} \n Date: ${currentDate}`)
+                    .setTimestamp();
+
+                await interaction.reply({ embeds: [embed] });
+            } catch (error) {
+                console.error('Error processing autoban command:', error);
+                await interaction.reply(`There was an error processing your command: ${error}`);
             }
-
-            await db.run('INSERT INTO autoban (user_id, reason, date) VALUES (?, ?, ?)', [userId, reason, currentDate]);
-
-            await db.close();
-            
-            await interaction.client.users.fetch(userId).then(user => {
-                interaction.guild.bans.create(user, { reason: reason });
-            }).catch(error => {
-                console.error(`Error banning user: ${error}`);
-            });
-         
-            const embed = new EmbedBuilder()
-                .setColor('#ff0000')
-                .setTitle('User Auto Blacklist')
-                .setDescription(`User ${userId} has been globally banned. \n Reason: ${reason} \n Date: ${currentDate}`)
-                .setTimestamp();
-
-            await interaction.reply({ embeds: [embed] });
-        } catch (error) {
-            console.error('Error processing autoban command:', error);
-            await interaction.reply(`There was an error processing your command: ${error}`);
+        } else {
+            await interaction.reply('You do not have permission to use this command.'); 
         }
     },
 };
